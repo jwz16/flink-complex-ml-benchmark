@@ -1,0 +1,23 @@
+name: Pipeline 2
+id: pipeline2
+nodes:
+- type: model
+  id: 1
+  name: mobilenet_v1
+  next: [2]
+  handler_class: VehicleClassificationHandler # create this class in `experiments/handlers/pipeline2`
+- type: model
+  id: 2
+  name: damage_vehicle_yolo5
+  next: [3]
+  handler_class: DamagedVehicleDetectionHandler # create this class in `experiments/handlers/pipeline2`
+- type: model
+  id: 3
+  name: yolos-small-finetuned-license-plate-detection
+  next: [4]
+  handler_class: LicensePlateExtractionHandler # create this class in `experiments/handlers/pipeline2`
+- type: model
+  id: 4
+  name: trocr-small-printed
+  next: []
+  handler_class: LicensePlateOcrHandler # create this class in `experiments/handlers/pipeline2`

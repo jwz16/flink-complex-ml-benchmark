@@ -1,0 +1,23 @@
+name: Pipeline 1
+nodes:
+- type: model
+  id: 1
+  name: m1
+  model_path: "None"
+  next: [2, 3]
+- type: model
+  id: 2
+  name: m2
+  model_path: "None"
+  next: [4]
+- type: model
+  id: 3
+  name: m3
+  model_path: "None"
+  next: [4]
+- type: model
+  id: 4
+  name: m4
+  model_path: "None"
+  next: []
+

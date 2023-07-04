@@ -1,0 +1,19 @@
+.vscode
+codebase/flink-complex-ml-benchmark/target
+config.properties.bak
+
+*.jar
+*.classpath
+*.class
+
+# Python Virtual Environment
+.venv
+
+# ML weights for serving framework, generate them while infering
+*.mar
+*.war
+
+servmgr
+
+# Intellij .idea files
+.idea

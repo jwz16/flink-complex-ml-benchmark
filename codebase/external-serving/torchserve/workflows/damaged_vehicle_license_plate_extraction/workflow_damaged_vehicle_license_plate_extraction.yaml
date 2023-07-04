@@ -1,0 +1,27 @@
+models:
+  min-workers: 1
+  max-workers: 1
+  batch-size: 1           # set to 1 because we have already controlled the batch size from Flink data source.
+  max-batch-delay: 100
+  retry-attempts: 5
+  timeout-ms: 300000
+
+  vehicle_classification:
+    url: mobilenet_v1.mar
+  
+  vehicle_damage_detection:
+    url: damage_vehicle_yolo5.mar
+  
+  vehicle_license_plate_detection:
+    url: yolos-small-finetuned-license-plate-detection.mar
+  
+  vehicle_license_plate_ocr:
+    url: trocr-small-printed.mar
+
+# preprocessor -> 
+# vehicle_classification -> vehicle_damage_detection -> vehicle_license_plate_detection -> vehicle_license_plate_ocr
+dag:
+  pre_processing: [vehicle_classification, vehicle_damage_detection, vehicle_license_plate_detection]
+  vehicle_classification: [vehicle_damage_detection]
+  vehicle_damage_detection: [vehicle_license_plate_detection]
+  vehicle_license_plate_detection: [vehicle_license_plate_ocr]

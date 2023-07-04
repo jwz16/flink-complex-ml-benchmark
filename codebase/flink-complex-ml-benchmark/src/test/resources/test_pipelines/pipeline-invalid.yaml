@@ -1,0 +1,13 @@
+name: Pipeline 1
+nodes:
+- type: preprocessor
+  id: 1
+  next: [2]
+- type: model
+  id: 2
+  model_path: "None"
+  next: [3]
+- type: model
+  id: 3
+  model_path: "None"
+  next: [1]

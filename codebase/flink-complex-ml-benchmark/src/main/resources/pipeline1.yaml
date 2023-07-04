@@ -1,0 +1,13 @@
+name: Pipeline 1
+id: pipeline1
+nodes:
+- type: model
+  id: 1
+  name: mobilenet_v1
+  next: [2]
+  handler_class: VehicleClassificationHandler # create this class in `experiments/handlers/pipeline1`
+- type: model
+  id: 2
+  name: damage_vehicle_yolo5
+  next: []
+  handler_class: DamagedVehicleDetectionHandler # create this class in `experiments/handlers/pipeline1`

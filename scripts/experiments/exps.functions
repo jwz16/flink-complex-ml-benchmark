@@ -1,0 +1,98 @@
+#!/bin/bash
+source ./common_vars.sh
+
+function clear_all_results() {
+  rm -rf $FILE_SINK_DIR 
+}
+
+function merge_all_results() {
+  exp_result_file=$1
+
+  cat $(find ${FILE_SINK_DIR} -name "part-*") > ${MERGED_CSV_FILE}
+  tr -d '()' < ${MERGED_CSV_FILE} > $exp_result_file
+}
+
+function update_benchmark_config() {
+  benchmark_type=$1
+  pipeline_type=$2
+  pipeline=$3
+  batch_size=$4
+  rate=$5
+  parallelism=$6
+  exp_type=$7
+
+  force_sync_req=false
+  if [[ $exp_type = "latency" ]]; then
+    force_sync_req=true
+  fi
+
+  sed -i -E "s/(benchmarkType = ).*/\1$benchmark_type/" $BENCHMARK_CONFIG_FILE
+  sed -i -E "s/(pipelineType = ).*/\1$pipeline_type/" $BENCHMARK_CONFIG_FILE
+  sed -i -E "s/(pipelineConfigPath = ).*/\1$pipeline.yaml/" $BENCHMARK_CONFIG_FILE
+  sed -i -E "s/(batchSize = ).*/\1$batch_size/" $BENCHMARK_CONFIG_FILE
+  sed -i -E "s/(inputRate = ).*/\1$rate/" $BENCHMARK_CONFIG_FILE
+  sed -i -E "s/(parallelism = ).*/\1$parallelism/" $BENCHMARK_CONFIG_FILE
+  sed -i -E "s/(forceSyncRequest = ).*/\1${force_sync_req}/" $BENCHMARK_CONFIG_FILE
+}
+
+function parse_torch_serve_host() {
+  line=$(cat ${BENCHMARK_CONFIG_FILE} | grep torchServeHost)
+  pattern=".* = ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$"
+  if [[ $line =~ $pattern ]]; then
+    TORCHSERVE_HOST=${BASH_REMATCH[1]}
+
+    echo "TorchServe host: $TORCHSERVE_HOST"
+  else
+    echo "cannot find TorchServe host configuration, use localhost by default"
+  fi
+}
+
+function scale_torchserve_workers() {
+  num_of_workers=$1
+
+  for model_name in ${MODEL_NAMES[@]}; do
+    echo "scaling workers for ${model_name}"
+    curl -v -X PUT "http://${TORCHSERVE_HOST}:8081/models/$model_name?min_worker=$num_of_workers&max_worker=$num_of_workers&synchronous=true"
+  done
+}
+
+function run_all_experiments() {
+  BENCHMARK_TYPE=$1 # benchmark type, [ embedded | external ]
+  PIPELINE_TYPE=$2  # pipeline type, [ torchserve | tf-serving | openvino | onnx | tf-saved | nd4j ]
+  EXP_TYPE=$3       # experiment type, [ latency | throughput | vertical_scalability ]
+
+  parse_torch_serve_host
+
+  for pipeline in ${PIPELINES[@]}; do
+    for batch_size in ${BATCH_SIZES[@]}; do
+      for rate in ${INPUT_RATES[@]}; do
+        for parallelism in ${PARALLELISM[@]}; do
+          update_benchmark_config ${BENCHMARK_TYPE} ${PIPELINE_TYPE} ${pipeline} ${batch_size} ${rate} ${parallelism} ${EXP_TYPE}
+          
+          pushd $BENCHMARK_ROOT
+          mvn clean install -Dexec.classpathScope=test -Djavacpp.platform=linux-x86_64
+          popd
+
+          scale_torchserve_workers $parallelism
+
+          # run experiment
+          for (( i=0; i<${EXPERIMENT_RUNS}; i++ )); do
+            clear_all_results
+            
+            echo "Running ${i}-th ${EXP_TYPE} experiment for ${BENCHMARK_TYPE} ${PIPELINE_TYPE} ${pipeline} batchSize=${batch_size} inputRate=${rate} parallelism=${parallelism}"
+
+            pushd $BENCHMARK_ROOT
+            mvn exec:java -Dexec.mainClass="edu.bu.cs551.team8.ComplexMLBenchmark" -Dexec.classpathScope=test -Dexec.cleanupDaemonThreads=false
+            popd
+            
+            # merge all results to a combined file, e.g. /tmp/experiments_results/external/torchserve/latency/pipeline1-10-10-1-0.csv
+            RESULT_DIR=${EXPERIMENTS_RESULTS_DIR}/${BENCHMARK_TYPE}/${PIPELINE_TYPE}/${exp_type}
+            EXPERIMENT_RESULT_FILE=${RESULT_DIR}/${pipeline}-${batch_size}-${rate}-${parallelism}-${i}.csv
+            mkdir -p ${RESULT_DIR}
+            merge_all_results $EXPERIMENT_RESULT_FILE
+          done
+        done
+      done
+    done
+  done
+}
