@@ -82,7 +82,7 @@ function run_all_experiments() {
             echo "Running ${i}-th ${EXP_TYPE} experiment for ${BENCHMARK_TYPE} ${PIPELINE_TYPE} ${pipeline} batchSize=${batch_size} inputRate=${rate} parallelism=${parallelism}"
 
             pushd $BENCHMARK_ROOT
-            mvn exec:java -Dexec.mainClass="edu.bu.cs551.team8.ComplexMLBenchmark" -Dexec.classpathScope=test -Dexec.cleanupDaemonThreads=false
+            mvn exec:java -Dexec.mainClass="edu.bu.flink_complex_ml_benchmark.ComplexMLBenchmark" -Dexec.classpathScope=test -Dexec.cleanupDaemonThreads=false
             popd
             
             # merge all results to a combined file, e.g. /tmp/experiments_results/external/torchserve/latency/pipeline1-10-10-1-0.csv

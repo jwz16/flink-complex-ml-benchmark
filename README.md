@@ -10,7 +10,7 @@
 - Docker
 - 16GB RAM
 
-> To keep the repository clean, all the model weights are deleted. The codebase may not be able to run at this moment due to lack of model weights.
+> To keep the repository clean, all the model weights are deleted. The codebase may not runnable at this moment due to the lack of model weights.
 
 ## Run experiments
 See [Codebase README](./codebase/flink-complex-ml-benchmark/README.md)
@@ -21,8 +21,8 @@ See [Codebase README](./codebase/flink-complex-ml-benchmark/README.md)
 ```
 
 ## TODO
-- [ ] ONNX support
+- [x] TorchServe support
+- [x] ONNX support
 - [ ] TF-Saved support
 - [ ] ND4j support
 - [ ] TF-serving support
-

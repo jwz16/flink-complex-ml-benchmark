@@ -1,0 +1,15 @@
+name: Pipeline 5
+id: pipeline5
+nodes:
+- type: model
+  id: 1
+  name: mobilenet_v1
+  model_path: "models/mobilenet.onnx"
+  next: [2]
+  handler_class: VehicleClassificationHandler # create this class in `handlers/pipeline5`
+- type: model
+  id: 2
+  name: license_plate_detection
+  model_path: "models/license_plate_detection.onnx"
+  next: []
+  handler_class: LicensePlateDetectionHandler # create this class in `handlers/pipeline5`

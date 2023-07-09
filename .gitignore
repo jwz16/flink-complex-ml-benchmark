@@ -12,6 +12,7 @@ config.properties.bak
 # ML weights for serving framework, generate them while infering
 *.mar
 *.war
+*.onnx
 
 servmgr
 
