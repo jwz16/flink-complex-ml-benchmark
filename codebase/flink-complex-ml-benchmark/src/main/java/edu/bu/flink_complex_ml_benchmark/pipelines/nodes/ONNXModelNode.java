@@ -45,7 +45,7 @@ public class ONNXModelNode extends EmbeddedModelNode {
       return input.toMLEventOut();
     }
 
-    var eventOut = new MLEventOut();
+    var eventOut = input.toMLEventOut();
     try {
       String result = this.model.inference(input);
       eventOut.setResult(result);

@@ -11,7 +11,7 @@ public class ComplexMLBenchmark {
   public ComplexMLBenchmark(String[] args) throws IOException {
   }
 
-  private void run() throws Exception {
+  public void run() throws Exception {
     var config = Config.getInstance();
     
     var p = Pipeline.build(

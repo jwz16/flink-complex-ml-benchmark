@@ -71,18 +71,19 @@ public class ONNXModel  {
       var inputTensor = OnnxTensor.createTensor(this.env, floatBuf, inputMat.shape());
       var output = session.run(Collections.singletonMap("input", inputTensor));
       
-      var preds = Nd4j.create(
-        ((OnnxTensor)output.get(1)).getFloatBuffer().array(),
-        new long[] {config.getBatchSize(), outputShape[1]},
-        'c'
-      );
+      // var preds = Nd4j.create(
+      //   ((OnnxTensor)output.get(1)).getFloatBuffer().array(),
+      //   new long[] {config.getBatchSize(), outputShape[1]},
+      //   'c'
+      // );
 
-      var buf = BinarySerde.toByteBuffer(preds);
-      var data = new byte[buf.remaining()];
-      buf.get(data);
+      // var buf = BinarySerde.toByteBuffer(preds);
+      // var data = new byte[buf.remaining()];
+      // buf.get(data);
 
-      return Base64.getEncoder().encodeToString(data);
+      // return Base64.getEncoder().encodeToString(data);
 
+      return null;
     } catch (OrtException e) {
       e.printStackTrace();
     }

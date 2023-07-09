@@ -4,10 +4,12 @@ nodes:
 - type: model
   id: 1
   name: mobilenet_v1
+  model_path: "models/onnx/mobilenet_v1.onnx"
   next: [2]
   handler_class: VehicleClassificationHandler # create this class in `experiments/handlers/pipeline1`
 - type: model
   id: 2
-  name: damage_vehicle_yolo5
+  name: yolo5_damage_vehicle
+  model_path: "models/onnx/yolo5_damage_vehicle.onnx"
   next: []
   handler_class: DamagedVehicleDetectionHandler # create this class in `experiments/handlers/pipeline1`
