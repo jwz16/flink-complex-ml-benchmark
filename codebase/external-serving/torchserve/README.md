@@ -17,6 +17,7 @@ Add the current user to docker group to avoid TorchServe build failures:
 ```
 sudo groupadd docker
 sudo usermod -aG docker $USER
+newgrp docker
 ```
 
 ### Usage

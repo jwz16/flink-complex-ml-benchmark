@@ -13,6 +13,8 @@ config.properties.bak
 *.mar
 *.war
 *.onnx
+codebase/external-serving/torchserve/model-store
+assets/weights
 
 servmgr
 

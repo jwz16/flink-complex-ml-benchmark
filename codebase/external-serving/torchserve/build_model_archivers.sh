@@ -22,7 +22,7 @@ do
   echo -e "\nstart building, model name: ${model_name}, handler file: ${handler_file}"
 
   weights_name=pytorch_model.bin
-  if [[ $model_name == damage_vehicle_yolo5 ]]; then
+  if [[ $model_name == yolo5_damage_vehicle ]]; then
     weights_name=pytorch_model.pt
   fi
 
@@ -36,11 +36,11 @@ do
 
   CMD_CREATE_MAR="torch-model-archiver --model-name ${model_name} --version 1.0 --serialized-file ${CONTAINER_SERIALIZED_FILE} --handler ${CONTAINER_HANDLER} --extra-files ${CONTAINER_CONFIG_JSON},${CONTAINER_REPROCESSOR_CONFIG_JSON} --export-path /home/model-server/model-store -f"
 
-  if [[ $model_name == damage_vehicle_yolo5 ]]; then
+  if [[ $model_name == yolo5_damage_vehicle ]]; then
     CMD_CREATE_MAR="torch-model-archiver --model-name ${model_name} --version 1.0 --serialized-file ${CONTAINER_SERIALIZED_FILE} --handler ${CONTAINER_HANDLER} --export-path /home/model-server/model-store -f"
   fi
 
-  if [[ $model_name == trocr-small-printed ]]; then
+  if [[ $model_name == trocr_small_printed ]]; then
     CONTAINER_GENERATION_CONFIG_JSON=$CONTAINER_MODEL_PATH/generation_config.json
     CONTAINER_SPECIAL_TOKENS_MAP_JSON=$CONTAINER_MODEL_PATH/special_tokens_map.json
     CONTAINER_TOKENIZER_CONFIG_JSON=$CONTAINER_MODEL_PATH/tokenizer_config.json
