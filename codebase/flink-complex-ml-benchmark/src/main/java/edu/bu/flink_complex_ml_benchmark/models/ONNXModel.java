@@ -2,14 +2,12 @@ package edu.bu.flink_complex_ml_benchmark.models;
 
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.nd4j.enums.ImageResizeMethod;
 import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.serde.binary.BinarySerde;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +19,6 @@ import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 import ai.onnxruntime.TensorInfo;
-import edu.bu.flink_complex_ml_benchmark.Config;
 import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
 
 public class ONNXModel  {
