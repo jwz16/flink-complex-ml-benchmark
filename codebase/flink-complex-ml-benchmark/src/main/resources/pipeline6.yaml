@@ -1,0 +1,27 @@
+name: Pipeline 6
+id: pipeline6
+nodes:
+- type: model
+  id: 1
+  name: mobilenet_v1
+  model_path: "models/onnx/mobilenet_v1.onnx"
+  next: [2, 3, 4]
+  handler_class: VehicleClassificationHandler # create this class in `experiments/handlers/pipeline6`
+- type: model
+  id: 2
+  name: yolo5_damage_vehicle
+  model_path: "models/onnx/yolo5_damage_vehicle.onnx"
+  next: []
+  handler_class: DamagedVehicleDetectionHandler # create this class in `experiments/handlers/pipeline6`
+- type: model
+  id: 3
+  name: yolos_license_plate_detection
+  model_path: "models/onnx/yolos_license_plate_detection.onnx"
+  next: []
+  handler_class: LicensePlateExtractionHandler # create this class in `experiments/handlers/pipeline6`
+- type: model
+  id: 4
+  name: trocr_small_printed
+  model_path: "models/onnx/trocr_small_printed.onnx"
+  next: []
+  handler_class: LicensePlateOcrHandler # create this class in `experiments/handlers/pipeline6`

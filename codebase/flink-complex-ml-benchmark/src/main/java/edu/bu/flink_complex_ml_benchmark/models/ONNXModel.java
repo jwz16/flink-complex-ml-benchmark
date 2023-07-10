@@ -3,6 +3,9 @@ package edu.bu.flink_complex_ml_benchmark.models;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.nd4j.enums.ImageResizeMethod;
 import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.factory.Nd4j;
@@ -67,9 +70,17 @@ public class ONNXModel  {
       );
       inputMat = inputMat.permute(0, 3, 1, 2); // swap dimensions back
 
+      Map<String, OnnxTensor> inputs = new HashMap<>();
       var floatBuf = inputMat.data().asNioFloat();
       var inputTensor = OnnxTensor.createTensor(this.env, floatBuf, inputMat.shape());
-      var output = session.run(Collections.singletonMap("input", inputTensor));
+      inputs.put("input", inputTensor);
+      
+      if (session.getInputInfo().size() > 1) {
+        var shapeTensor = OnnxTensor.createTensor(this.env, new long[][] {{inputShape[1], inputShape[2], inputShape[3]}});
+        inputs.put("onnx::Reshape_1", shapeTensor);
+      }
+
+      var output = session.run(inputs);
       
       // var preds = Nd4j.create(
       //   ((OnnxTensor)output.get(1)).getFloatBuffer().array(),

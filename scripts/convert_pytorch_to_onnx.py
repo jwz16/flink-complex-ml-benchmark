@@ -4,13 +4,19 @@ import torch.onnx
 from transformers import AutoModelForImageClassification, YolosForObjectDetection, AutoTokenizer, VisionEncoderDecoderModel
 import yolov5
 
-def convert(model, model_name, image_size=[3, 224, 224], decoder_input_ids=None):
+def convert(model, model_name, image_size=[3, 224, 224], decoder_input_ids=None, dynamic_axes=None):
   output_dir = '../assets/weights/onnx'
   batch_size = 1
 
   # Input to the model
   x = torch.randn(batch_size, image_size[0], image_size[1], image_size[2], requires_grad=True)
   input = x if decoder_input_ids is None else (x, decoder_input_ids)
+
+  if dynamic_axes is None:
+    dynamic_axes = {
+      'input' : {0 : 'batch_size'},
+      'output' : {0 : 'batch_size'}
+    }
 
   # Export the model
   torch.onnx.export(model,                                          # model being run
@@ -21,8 +27,7 @@ def convert(model, model_name, image_size=[3, 224, 224], decoder_input_ids=None)
                     do_constant_folding=True,                       # whether to execute constant folding for optimization
                     input_names = ['input'],                        # the model's input names
                     output_names = ['output'],                      # the model's output names
-                    dynamic_axes = {'input' : {0 : 'batch_size'},   # variable length axes
-                                    'output' : {0 : 'batch_size'}})
+                    dynamic_axes = dynamic_axes)                    # variable length axes
 
 if __name__ == '__main__':
     torch_model = AutoModelForImageClassification.from_pretrained('../assets/weights/pytorch/mobilenet_v1')
