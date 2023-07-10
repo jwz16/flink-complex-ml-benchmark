@@ -13,6 +13,9 @@ import org.nd4j.serde.binary.BinarySerde;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
@@ -61,8 +64,6 @@ public class ONNXModel  {
     logger.info("Inferencing event: " + event.getId());
 
     try {
-      var config = Config.getInstance();
-
       var inputMat = Nd4j.image().imageResize(
         event.getDataAsINDArray().permute(0, 2, 3, 1).castTo(DataType.DOUBLE), /* swap dimensions to NHWC */
         Nd4j.createFromArray(inputShape[2], inputShape[3]),
@@ -80,21 +81,21 @@ public class ONNXModel  {
         inputs.put("onnx::Reshape_1", shapeTensor);
       }
 
+      // run inference on the model
       var output = session.run(inputs);
       
-      // var preds = Nd4j.create(
-      //   ((OnnxTensor)output.get(1)).getFloatBuffer().array(),
-      //   new long[] {config.getBatchSize(), outputShape[1]},
-      //   'c'
-      // );
+      // store results in base64 encoded strings, base64 encoding will get rid of string encoding issues.
+      // all results are merged in a json string.
+      var jsonObj = new JsonObject();
+      var jsonData = new JsonArray();
+      for (var entry : output) {
+        var data = ((OnnxTensor)entry.getValue()).getByteBuffer().array();
+        var b64data = Base64.getEncoder().encodeToString(data);
+        jsonData.add(b64data);
+      }
+      jsonObj.add("data", jsonData);
 
-      // var buf = BinarySerde.toByteBuffer(preds);
-      // var data = new byte[buf.remaining()];
-      // buf.get(data);
-
-      // return Base64.getEncoder().encodeToString(data);
-
-      return null;
+      return jsonObj.toString();
     } catch (OrtException e) {
       e.printStackTrace();
     }
