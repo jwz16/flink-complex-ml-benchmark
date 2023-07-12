@@ -31,14 +31,14 @@ public class SyntheticImageBatchesGenerator extends Generator {
     
   @Override
   public boolean hasNext() {
-    if (!finishedWarmUp) {
+    if (finishedWarmUp) {
+      if (System.currentTimeMillis() - startTime > experimentTime)
+        return false;
+    } else {
       if (--warmupRequestsNum < 0) {
         finishedWarmUp = true;
         this.startTime = System.currentTimeMillis();
       }
-    } else {
-      if (System.currentTimeMillis() - startTime > experimentTime)
-        return false;
     }
     return true;
   }

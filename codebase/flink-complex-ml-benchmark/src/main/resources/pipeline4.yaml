@@ -8,16 +8,16 @@ nodes:
   handler_class: VehicleClassificationHandler # create this class in `experiments/handlers/pipeline4`
 - type: model
   id: 2
-  name: damage_vehicle_yolo5
+  name: yolo5_damage_vehicle
   next: [4]
   handler_class: DamagedVehicleDetectionHandler # create this class in `experiments/handlers/pipeline4`
 - type: model
   id: 3
-  name: yolos-small-finetuned-license-plate-detection
+  name: yolos_license_plate_detection
   next: [4]
   handler_class: LicensePlateExtractionHandler # create this class in `experiments/handlers/pipeline4`
 - type: model
   id: 4
-  name: trocr-small-printed
+  name: trocr_small_printed
   next: []
   handler_class: LicensePlateOcrHandler # create this class in `experiments/handlers/pipeline4`
