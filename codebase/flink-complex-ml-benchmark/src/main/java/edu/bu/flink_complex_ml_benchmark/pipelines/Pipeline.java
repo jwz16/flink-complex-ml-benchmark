@@ -42,7 +42,6 @@ import edu.bu.flink_complex_ml_benchmark.exceptions.UnknownPipelineType;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ModelNode;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ONNXModelNode;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.PipelineNode;
-import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.PreprocessorNode;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.TorchServeModelNode;
 
 public class Pipeline {
@@ -209,10 +208,6 @@ public class Pipeline {
     List<PipelineNode> newNodes = new ArrayList<PipelineNode>();
     for (PipelineNode node : nodes) {
       switch (node.getType()) {
-        case "preprocessor":
-          newNodes.add(new PreprocessorNode(node));
-          break;
-
         // default node type will be "model"
         case "model":
         default: {
