@@ -1,7 +1,8 @@
 .vscode
 codebase/flink-complex-ml-benchmark/target
+codebase/flink-complex-ml-benchmark/core/target
+codebase/flink-complex-ml-benchmark/input-producer/target
 config.properties.bak
-codebase/input-producer/target
 
 *.jar
 *.classpath
