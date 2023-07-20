@@ -4,21 +4,18 @@ import java.util.Properties;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
-import org.apache.kafka.common.errors.AuthorizationException;
-import org.apache.kafka.common.errors.OutOfOrderSequenceException;
-import org.apache.kafka.common.errors.ProducerFencedException;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.bu.flink_complex_ml_benchmark.connectors.SyntheticImageBatchesGenerator;
 
-/**
- * Hello world!
- *
- */
-public class KafkaInputProducer 
-{
+public class KafkaInputProducer {
+  protected static Logger logger = LoggerFactory.getLogger(KafkaInputProducer.class);
+
   SyntheticImageBatchesGenerator generator;
 
   public KafkaInputProducer() {
@@ -33,28 +30,23 @@ public class KafkaInputProducer
 
   public void run() {
     Properties props = new Properties();
-    props.put("bootstrap.servers", "localhost:9092");
-    props.put("transactional.id", "input-producer-transaction");
-    Producer<String, String> producer = new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
+    props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9094");
+    props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+    props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
-    producer.initTransactions();
+    Producer<String, String> producer = new KafkaProducer<>(props);
 
     try {
-        producer.beginTransaction();
-        
-        var event = generator.next();
-        while (generator.hasNext()) {
-          producer.send(new ProducerRecord<>("complex-ml-input", Long.toString(event.getId()), event.toString()));
-        }
-            
-        producer.commitTransaction();
-    } catch (ProducerFencedException | OutOfOrderSequenceException | AuthorizationException e) {
-        // We can't recover from these exceptions, so our only option is to close the producer and exit.
-        producer.close();
+      
+      var event = generator.next();
+      while (generator.hasNext()) {
+        producer.send(new ProducerRecord<>("complex-ml-input", Long.toString(event.getId()), event.serialize()));
+      }
+
     } catch (KafkaException e) {
-        // For all other exceptions, just abort the transaction and try again.
-        producer.abortTransaction();
+      logger.error(e.getMessage());
     }
+
     producer.close();
   }
 }

@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.serde.binary.BinarySerde;
 
+import com.google.gson.JsonObject;
+
 public class MLEventOut extends MLEvent {
   
   private static final long serialVersionUID = 2399269973720482248L;
@@ -24,6 +26,24 @@ public class MLEventOut extends MLEvent {
 
   public MLEventIn toMLEventIn() {
     return new MLEventIn(this);
+  }
+
+  @Override
+  public String serialize() {
+    var jsonObj =  super.serializeToJsonObject();
+
+    jsonObj.addProperty("result", result);
+
+    return jsonObj.toString();
+  }
+
+  @Override
+  public JsonObject deserialize(String value) {
+    var jsonObj = super.deserialize(value);
+
+    result = jsonObj.get("result").getAsString();
+
+    return jsonObj;
   }
 
   public byte[] getData() { 

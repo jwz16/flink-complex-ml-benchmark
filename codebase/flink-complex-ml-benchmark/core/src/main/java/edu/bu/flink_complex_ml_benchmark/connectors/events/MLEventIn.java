@@ -1,11 +1,12 @@
 package edu.bu.flink_complex_ml_benchmark.connectors.events;
 
-import java.nio.ByteBuffer;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.serde.binary.BinarySerde;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 public class MLEventIn extends MLEvent {
   private static final long serialVersionUID = 5198233974122296689L;
@@ -61,25 +62,22 @@ public class MLEventIn extends MLEvent {
     return new MLEventOut(this);
   }
 
-  public byte[] getData() {
-    return data;
+  @Override
+  public String serialize() {
+    var jsonObj = super.serializeToJsonObject();
+    jsonObj.addProperty("results", new Gson().toJson(results));
+
+    return jsonObj.toString();
   }
 
-  public void setData(byte[] data) {
-    this.data = data;
-  }
+  @Override
+  public JsonObject deserialize(String value) {
+    var jsonObj = super.deserialize(value);
 
-  public INDArray getDataAsINDArray() {
-    if (data == null)
-      return null;
-    
-    return BinarySerde.toArray(ByteBuffer.wrap(data));
-  }
+    Type type = new TypeToken<Map<String, String>>(){}.getType();
+    results = new Gson().fromJson(jsonObj.get("results").getAsString(), type);
 
-  public void setDataFromINDArray(INDArray mat) {
-    var buf = BinarySerde.toByteBuffer(mat);
-    data = new byte[buf.remaining()];
-    buf.get(data);
+    return jsonObj;
   }
 
   public Map<String, String> getResults() {

@@ -1,29 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.bu.flink_complex_ml_benchmark</groupId>
-    <artifactId>flink-complex-ml-benchmark</artifactId>
-    <version>0.0.1</version>
-	<packaging>pom</packaging>
+  <groupId>edu.bu.flink_complex_ml_benchmark</groupId>
+  <artifactId>flink-complex-ml-benchmark</artifactId>
+  <version>0.0.1</version>
+  <packaging>pom</packaging>
 
-    <name>Flink Complex ML Benchmark Suite</name>
+  <name>Flink Complex ML Benchmark Suite</name>
 
-    <properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<flink.version>1.16.1</flink.version>
-		<dl4j-master.version>1.0.0-M2.1</dl4j-master.version>
-		<target.java.version>11</target.java.version>
-		<scala.binary.version>2.12</scala.binary.version>
-		<maven.compiler.source>${target.java.version}</maven.compiler.source>
-		<maven.compiler.target>${target.java.version}</maven.compiler.target>
-		<log4j.version>2.17.1</log4j.version>
-	</properties>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <flink.version>1.16.1</flink.version>
+    <dl4j-master.version>1.0.0-M2.1</dl4j-master.version>
+    <target.java.version>11</target.java.version>
+    <scala.binary.version>2.12</scala.binary.version>
+    <maven.compiler.source>${target.java.version}</maven.compiler.source>
+    <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <log4j.version>2.17.1</log4j.version>
+  </properties>
 
-    <modules>
-        <module>core</module>
-        <module>input-producer</module>
-    </modules>
+  <modules>
+    <module>core</module>
+    <module>input-producer</module>
+  </modules>
+
+  <dependencies>
+    <!-- Add logging framework, to produce console output when running in the IDE. -->
+    <!-- These dependencies are excluded from the application JAR by default. -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>${log4j.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
 
 </project>
