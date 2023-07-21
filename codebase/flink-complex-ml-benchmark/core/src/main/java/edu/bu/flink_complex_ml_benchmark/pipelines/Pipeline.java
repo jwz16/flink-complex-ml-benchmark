@@ -10,10 +10,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringEncoder;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.file.sink.FileSink;
+import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -37,6 +40,7 @@ import edu.bu.flink_complex_ml_benchmark.Util;
 import edu.bu.flink_complex_ml_benchmark.connectors.Generator;
 import edu.bu.flink_complex_ml_benchmark.connectors.MLSyntheticImageBatchesSource;
 import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventInSchema;
 import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
 import edu.bu.flink_complex_ml_benchmark.exceptions.UnknownPipelineType;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ModelNode;
@@ -115,29 +119,12 @@ public class Pipeline {
   }
 
   public void setupStream() {
-    var config = Config.getInstance();
-
     // Set up the streaming execution environment
     env = StreamExecutionEnvironment.getExecutionEnvironment();
     Util.registerProtobufType(env);
 
-    int inputPotentialProducers = (int) Math.ceil((double) config.getInputRate() / config.getMaxInputRatePerThread());
-    int inputProducers = inputPotentialProducers > 0 ? inputPotentialProducers : 1;
-    int inputRatePerProducer = Math.min(config.getInputRate(), config.getInputRate() / inputProducers);
-
-    env.setParallelism(inputProducers);
-
-    var inputSrc = new MLSyntheticImageBatchesSource(
-      config.getImageSize(),
-      config.getBatchSize(),
-      config.getExperimentTimeInSeconds(),
-      config.getWarmupRequestsNumber(),
-      inputRatePerProducer
-    );
-
-    this.generator = inputSrc.getGenerator();
-
-    DataStream<MLEventIn> inputStream = env.addSource(inputSrc);
+    // DataStream<MLEventIn> inputStream = inputStreamFromLocalDataSource(env);
+    DataStream<MLEventIn> inputStream = inputStreamFromKafkaDataSource(env);
     
     // build DAG datastream flow
     var allResults = buildDAG(inputStream);
@@ -471,7 +458,41 @@ public class Pipeline {
       return e;
     }
 
-   }
+  }
+
+  private DataStream<MLEventIn> inputStreamFromLocalDataSource(StreamExecutionEnvironment env) {
+    var config = Config.getInstance();
+
+    int inputPotentialProducers = (int) Math.ceil((double) config.getInputRate() / config.getMaxInputRatePerThread());
+    int inputProducers = inputPotentialProducers > 0 ? inputPotentialProducers : 1;
+    int inputRatePerProducer = Math.min(config.getInputRate(), config.getInputRate() / inputProducers);
+
+    env.setParallelism(inputProducers);
+
+    var inputSrc = new MLSyntheticImageBatchesSource(
+      config.getImageSize(),
+      config.getBatchSize(),
+      config.getExperimentTimeInSeconds(),
+      config.getWarmupRequestsNumber(),
+      inputRatePerProducer
+    );
+
+    this.generator = inputSrc.getGenerator();
+
+    return env.addSource(inputSrc);
+  }
+
+  private DataStream<MLEventIn> inputStreamFromKafkaDataSource(StreamExecutionEnvironment env) {
+    KafkaSource<MLEventIn> source = KafkaSource.<MLEventIn>builder()
+    .setBootstrapServers("localhost:9094")
+    .setTopics("complex-ml-input")
+    .setGroupId("complex-ml-input-consumer")
+    .setStartingOffsets(OffsetsInitializer.earliest())
+    .setValueOnlyDeserializer(new MLEventInSchema())
+    .build();
+
+    return env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
+  }
 
   public String getName() {
     return name;

@@ -72,6 +72,8 @@ public class MLEvent implements Serializable {
       jsonObj.get("data").getAsString()
     );
 
+    setDataFromINDArray(Nd4j.createNpyFromByteArray(data));
+
     return jsonObj;
   }
   
