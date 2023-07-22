@@ -12,12 +12,14 @@ import java.util.Vector;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.serialization.SimpleStringEncoder;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.file.sink.FileSink;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
+import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
-import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.co.CoFlatMapFunction;
@@ -57,7 +59,8 @@ public class Pipeline {
 
   protected StreamExecutionEnvironment env;
   protected DataStream<String> resultStream;
-  protected FileSink<String> sink;
+  // protected FileSink<String> sink;
+  protected KafkaSink<String> sink;
   protected Generator generator;
 
   protected Pipeline.Type type;
@@ -156,11 +159,20 @@ public class Pipeline {
       
     });
 
-    sink = FileSink
-      .forRowFormat(
-        new Path("/tmp/flink_complex_ml_benchmark_results"),
-        new SimpleStringEncoder<String>("UTF-8"))
-      .build();
+    // sink = FileSink
+    //   .forRowFormat(
+    //     new Path("/tmp/flink_complex_ml_benchmark_results"),
+    //     new SimpleStringEncoder<String>("UTF-8"))
+    //   .build();
+
+    sink = KafkaSink.<String>builder()
+        .setBootstrapServers("localhost:9094")
+        .setRecordSerializer(KafkaRecordSerializationSchema.builder()
+            .setTopic("complex-ml-output")
+            .setValueSerializationSchema(new SimpleStringSchema())
+            .build()
+        )
+        .build();
   }
 
   public void run() throws Exception{
@@ -582,11 +594,19 @@ public class Pipeline {
     this.resultStream = resultStream;
   }
 
-  public FileSink<String> getSink() {
+  // public FileSink<String> getSink() {
+  //   return sink;
+  // }
+
+  // public void setSink(FileSink<String> sink) {
+  //   this.sink = sink;
+  // }
+
+  public KafkaSink<String> getSink() {
     return sink;
   }
 
-  public void setSink(FileSink<String> sink) {
+  public void setSink(KafkaSink<String> sink) {
     this.sink = sink;
   }
 
