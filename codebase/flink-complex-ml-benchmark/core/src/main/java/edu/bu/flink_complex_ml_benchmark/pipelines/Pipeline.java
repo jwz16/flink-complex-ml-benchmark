@@ -90,6 +90,12 @@ public class Pipeline {
     return null;
   }
 
+  /**
+   * Build a new pipeline object based on pipeline definition file and pipeline type
+   * @param configPath Pipeline Yaml definition file path
+   * @param pipelineType
+   * @return Return a new pipeline object if success, otherwise return null
+   */
   public static Pipeline build(String configPath, Pipeline.Type pipelineType) {
     logger.info("building pipeline graph");
 
@@ -494,6 +500,11 @@ public class Pipeline {
     return env.addSource(inputSrc);
   }
 
+  /**
+   * Use Kafka as data source, so Flink can work as a consumer
+   * @param env 
+   * @return DataStream
+   */
   private DataStream<MLEventIn> inputStreamFromKafkaDataSource(StreamExecutionEnvironment env) {
     KafkaSource<MLEventIn> source = KafkaSource.<MLEventIn>builder()
     .setBootstrapServers("localhost:9094")

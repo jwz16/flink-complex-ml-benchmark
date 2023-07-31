@@ -28,7 +28,12 @@ public class SyntheticImageBatchesGenerator extends Generator {
 
     this.finishedWarmUp = false;
   }
-    
+  
+  /**
+   * Check if the generator has next event to generate.
+   * Depends on if the total experiment time is bigger than experimentTime
+   * @return  false means experiment ends, otherwise, true means experiment keeps going.
+   */
   @Override
   public boolean hasNext() {
     if (finishedWarmUp) {
@@ -42,7 +47,11 @@ public class SyntheticImageBatchesGenerator extends Generator {
     }
     return true;
   }
-
+  
+  /**
+   * Generate MLSyntheticImageBatchEvent, which extends MLEventIn.
+   * @return a new MLSyntheticImageBatchEvent
+   */
   @Override
   public MLEventIn next() {
     Nd4j.getRandom().setSeed(eventId);
