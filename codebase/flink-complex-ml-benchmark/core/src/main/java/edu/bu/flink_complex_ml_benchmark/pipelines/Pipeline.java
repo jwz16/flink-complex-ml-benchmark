@@ -14,7 +14,6 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.file.sink.FileSink;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
@@ -452,6 +451,13 @@ public class Pipeline {
   }
 
   DataStream<MLEventOut> mergeResults(Set<DataStream<MLEventOut>> results) {
+    /* TODO: Question
+    ** Given the following shape, will the Sink contains multiple events with the same event ID?
+    ** I believe so, but will it be an issue?
+    **         /---> Model A ---\
+    ** Source------> Model B -----> Sink
+    **         \---> Model C ---/
+    */
     var iter = results.iterator();
     var currSt = iter.next();
     while (iter.hasNext()) {

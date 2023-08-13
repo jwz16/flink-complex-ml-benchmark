@@ -1,10 +1,5 @@
 package edu.bu.flink_complex_ml_benchmark.connectors.events;
 
-import java.nio.ByteBuffer;
-
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.serde.binary.BinarySerde;
-
 import com.google.gson.JsonObject;
 
 public class MLEventOut extends MLEvent {
@@ -44,27 +39,6 @@ public class MLEventOut extends MLEvent {
     result = jsonObj.get("result").getAsString();
 
     return jsonObj;
-  }
-
-  public byte[] getData() { 
-    return data;
-  }
-  
-  public void setData(byte[] data) {
-    this.data = data;
-  }
-
-  public INDArray getDataAsINDArray() {
-    if (data == null)
-      return null;
-    
-    return BinarySerde.toArray(ByteBuffer.wrap(data));
-  }
-
-  public void setDataFromINDArray(INDArray mat) {
-    var buf = BinarySerde.toByteBuffer(mat);
-    data = new byte[buf.remaining()];
-    buf.get(data);
   }
 
   public String getResult() {

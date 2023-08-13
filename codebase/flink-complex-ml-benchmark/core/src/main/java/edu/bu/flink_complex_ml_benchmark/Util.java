@@ -11,6 +11,10 @@ import com.twitter.chill.protobuf.ProtobufSerializer;
 import edu.bu.flink_complex_ml_benchmark.handlers.BaseModelHandler;
 
 public class Util {
+  /**
+   * Register gRPC types
+   * @param env
+   */
   public static void registerProtobufType(StreamExecutionEnvironment env) {
     var config = env.getConfig();
     config.registerTypeWithKryoSerializer(PredictionsRequest.class, ProtobufSerializer.class);

@@ -56,11 +56,9 @@ public class SyntheticImageBatchesGenerator extends Generator {
   public MLEventIn next() {
     Nd4j.getRandom().setSeed(eventId);
     var mat = Nd4j.rand(batchSize, 3, imageSize, imageSize).muli(255).castTo(DataType.UINT8);
-    var buf = BinarySerde.toByteBuffer(mat);
-    var arr = new byte[buf.remaining()];
-    buf.get(arr);
-
-    return new MLSyntheticImageBatchEvent(eventId++, System.nanoTime(), arr);
+    var e = new MLSyntheticImageBatchEvent(eventId++, System.nanoTime(), null);
+    e.setDataFromINDArray(mat);
+    return e;
   }
 
   @Override

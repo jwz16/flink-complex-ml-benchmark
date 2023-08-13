@@ -24,6 +24,7 @@ public class ComplexMLBenchmark {
   }
 
   public static void main(String[] args) throws Exception {
+    
     new ComplexMLBenchmark(args).run();
   }
 

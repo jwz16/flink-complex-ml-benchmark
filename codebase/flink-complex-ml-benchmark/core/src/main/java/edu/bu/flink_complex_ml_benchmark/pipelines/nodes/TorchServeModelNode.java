@@ -53,6 +53,7 @@ public class TorchServeModelNode extends ExternalModelNode {
     var dataToSend = ByteString.copyFrom(jsonObj.toString().getBytes());
 
     var eventOut = input.toMLEventOut();
+    
     try {
       String result = TorchServeGrpcClient.getInstance().sendData(dataToSend, this.name);
       eventOut.setResult(result);
