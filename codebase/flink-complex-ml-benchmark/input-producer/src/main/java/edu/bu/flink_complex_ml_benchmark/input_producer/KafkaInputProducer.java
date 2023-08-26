@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.bu.flink_complex_ml_benchmark.connectors.SyntheticImageBatchesGenerator;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 
 public class KafkaInputProducer {
   protected static Logger logger = LoggerFactory.getLogger(KafkaInputProducer.class);
@@ -40,7 +40,7 @@ public class KafkaInputProducer {
     try {
       
       while (generator.hasNext()) {
-        MLEventIn event = generator.next();
+        MLEvent event = generator.next();
         producer.send(new ProducerRecord<>("complex-ml-input", Long.toString(event.getId()), event.serialize()));
       }
 

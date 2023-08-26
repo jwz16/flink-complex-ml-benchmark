@@ -4,7 +4,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 
 import edu.bu.flink_complex_ml_benchmark.types.ImageBatch;
 
-public class MLSyntheticImageBatchEvent extends MLEventIn {
+public class MLSyntheticImageBatchEvent extends MLEvent {
 
   private static final long serialVersionUID = 3132430024313511546L;
 
@@ -26,7 +26,7 @@ public class MLSyntheticImageBatchEvent extends MLEventIn {
     imgBatch.setData(data);
   }
 
-  public MLSyntheticImageBatchEvent(MLEventIn e) {
+  public MLSyntheticImageBatchEvent(MLEvent e) {
     super(e);
   }
   

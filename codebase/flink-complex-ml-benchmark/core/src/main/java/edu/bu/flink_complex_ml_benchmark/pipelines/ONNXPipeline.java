@@ -5,8 +5,7 @@ import java.util.Set;
 import org.apache.flink.streaming.api.datastream.DataStream;
 
 import edu.bu.flink_complex_ml_benchmark.ComplexMLBenchmark;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 import edu.bu.flink_complex_ml_benchmark.models.ONNXModel;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ModelNode;
 
@@ -32,8 +31,8 @@ public class ONNXPipeline extends EmbeddedPipeline {
   }
 
   @Override
-  protected DataStream<MLEventOut> modelStreamOp(ModelNode node, Set<DataStream<MLEventIn>> attachedInputStreams) {
-    return connectStreams(attachedInputStreams).process(node.getHandler().toSyncFunction());
+  protected DataStream<MLEvent> modelStreamOp(ModelNode node, Set<DataStream<MLEvent>> attachedInputStreams) {
+    return mergeStreams(attachedInputStreams).process(node.getHandler().toSyncFunction());
   }
 
   @Override

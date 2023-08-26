@@ -2,9 +2,8 @@ package edu.bu.flink_complex_ml_benchmark.connectors;
 
 import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.serde.binary.BinarySerde;
 
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 import edu.bu.flink_complex_ml_benchmark.connectors.events.MLSyntheticImageBatchEvent;
 
 public class SyntheticImageBatchesGenerator extends Generator {
@@ -49,11 +48,11 @@ public class SyntheticImageBatchesGenerator extends Generator {
   }
   
   /**
-   * Generate MLSyntheticImageBatchEvent, which extends MLEventIn.
+   * Generate MLSyntheticImageBatchEvent, which extends MLEvent.
    * @return a new MLSyntheticImageBatchEvent
    */
   @Override
-  public MLEventIn next() {
+  public MLEvent next() {
     Nd4j.getRandom().setSeed(eventId);
     var mat = Nd4j.rand(batchSize, 3, imageSize, imageSize).muli(255).castTo(DataType.UINT8);
     var e = new MLSyntheticImageBatchEvent(eventId++, System.nanoTime(), null);

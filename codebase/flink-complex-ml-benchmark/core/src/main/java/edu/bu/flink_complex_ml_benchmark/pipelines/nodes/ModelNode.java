@@ -1,7 +1,6 @@
 package edu.bu.flink_complex_ml_benchmark.pipelines.nodes;
 
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 import edu.bu.flink_complex_ml_benchmark.handlers.BaseModelHandler;
 import edu.bu.flink_complex_ml_benchmark.pipelines.Pipeline;
 
@@ -21,12 +20,12 @@ public class ModelNode extends PipelineNode {
    * Base model process function
    * @param input
    */
-  public MLEventOut process(MLEventIn input) {
+  public MLEvent process(MLEvent input) {
     checkRecordStartTimestamp(input);
     return null;
   }
 
-  private void checkRecordStartTimestamp(MLEventIn e) {
+  private void checkRecordStartTimestamp(MLEvent e) {
     if (!e.isStarted()) {
       e.setStarted(true);
       e.setStartTimestamp(System.nanoTime());

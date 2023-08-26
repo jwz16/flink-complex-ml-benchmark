@@ -2,7 +2,7 @@ package edu.bu.flink_complex_ml_benchmark.connectors.events;
 
 import java.util.List;
 
-public class MLImageFileBatchEvent extends MLEventIn {
+public class MLImageFileBatchEvent extends MLEvent {
 
   private static final long serialVersionUID = -4873262489030230386L;
   
@@ -17,7 +17,7 @@ public class MLImageFileBatchEvent extends MLEventIn {
     this.imgFilePathBatch = batch;
   }
 
-  public MLImageFileBatchEvent(MLEventIn e) {
+  public MLImageFileBatchEvent(MLEvent e) {
     super(e);
   }
 

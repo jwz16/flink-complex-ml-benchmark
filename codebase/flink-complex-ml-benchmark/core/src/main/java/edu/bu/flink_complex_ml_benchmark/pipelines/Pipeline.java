@@ -22,7 +22,6 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.co.CoFlatMapFunction;
-import org.apache.flink.streaming.api.functions.co.CoMapFunction;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +39,8 @@ import edu.bu.flink_complex_ml_benchmark.Config;
 import edu.bu.flink_complex_ml_benchmark.Util;
 import edu.bu.flink_complex_ml_benchmark.connectors.Generator;
 import edu.bu.flink_complex_ml_benchmark.connectors.MLSyntheticImageBatchesSource;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventInSchema;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventSchema;
 import edu.bu.flink_complex_ml_benchmark.exceptions.UnknownPipelineType;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ModelNode;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ONNXModelNode;
@@ -131,20 +129,20 @@ public class Pipeline {
     env = StreamExecutionEnvironment.getExecutionEnvironment();
     Util.registerProtobufType(env);
 
-    // DataStream<MLEventIn> inputStream = inputStreamFromLocalDataSource(env);
-    DataStream<MLEventIn> inputStream = inputStreamFromKafkaDataSource(env);
+    // DataStream<MLEvent> inputStream = inputStreamFromLocalDataSource(env);
+    DataStream<MLEvent> inputStream = inputStreamFromKafkaDataSource(env);
     
     // build DAG datastream flow
     var allResults = buildDAG(inputStream);
 
     // Benchmarking - record timestamp when the scoring is done
-    var results = mergeResults(allResults);
+    var results = mergeStreams(allResults);
 
-    DataStream<Tuple2<Long, Long>> records = results.map(new MapFunction<MLEventOut, Tuple2<Long, Long>>() {
+    DataStream<Tuple2<Long, Long>> records = results.map(new MapFunction<MLEvent, Tuple2<Long, Long>>() {
       private static final long serialVersionUID = 1L;
 
       @Override
-      public Tuple2<Long, Long> map(MLEventOut e) throws Exception {
+      public Tuple2<Long, Long> map(MLEvent e) throws Exception {
         // filter out failed requests
         if (e != null && e.getData() != null) {
           return new Tuple2<>(e.getStartTimestamp(), e.getFinishTimestamp());
@@ -334,21 +332,21 @@ public class Pipeline {
     return String.format("[Pipeline] Name: %s, Graph: %s\n", this.name, graph == null ? "null" : graph.toString());
   }
 
-  protected DataStream<MLEventOut> modelStreamOp(ModelNode node, Set<DataStream<MLEventIn>> attachedInputStreams) {
+  protected DataStream<MLEvent> modelStreamOp(ModelNode node, Set<DataStream<MLEvent>> attachedInputStreams) {
     return null;
   }
 
-  protected Set<DataStream<MLEventOut>> buildDAG(DataStream<MLEventIn> sourceInputStream) {
-    Map<PipelineNode, Set<DataStream<MLEventIn>>> nodesAttachedInputStreams = new HashMap<>();
+  protected Set<DataStream<MLEvent>> buildDAG(DataStream<MLEvent> sourceInputStream) {
+    Map<PipelineNode, Set<DataStream<MLEvent>>> nodesAttachedInputStreams = new HashMap<>();
     
     // source stream to the starter nodes
     for (var node : layeredNodes.get(0)) {
       if (!node.getType().equals("model")) 
         continue;
-      var newSrc = sourceInputStream.map(new MapFunction<MLEventIn, MLEventIn> () {
+      var newSrc = sourceInputStream.map(new MapFunction<MLEvent, MLEvent> () {
         private static final long serialVersionUID = -4772987795153271331L;
         @Override
-        public MLEventIn map(MLEventIn e) throws Exception {
+        public MLEvent map(MLEvent e) throws Exception {
           var newEvent = e.dup();
           return newEvent;
         }
@@ -357,7 +355,7 @@ public class Pipeline {
       nodesAttachedInputStreams.put(node, new HashSet<>(Arrays.asList(newSrc)));
     }
 
-    Set<DataStream<MLEventOut>> lastOutputStreams = new HashSet<DataStream<MLEventOut>>();
+    Set<DataStream<MLEvent>> lastOutputStreams = new HashSet<DataStream<MLEvent>>();
     for (var nodes : layeredNodes) {
       for (var node : nodes) {
         var attachedInputStreams = nodesAttachedInputStreams.get(node);
@@ -368,10 +366,10 @@ public class Pipeline {
         // if node has no successors, the output stream is the final stream
         // we need to record its finish timestamp.
         if (graph.successors(node).isEmpty()) {
-          outputStream = outputStream.map(new MapFunction<MLEventOut, MLEventOut>() {
+          outputStream = outputStream.map(new MapFunction<MLEvent, MLEvent>() {
             private static final long serialVersionUID = -4498921852176831334L;
             @Override
-            public MLEventOut map(MLEventOut value) throws Exception {
+            public MLEvent map(MLEvent value) throws Exception {
               value.setFinishTimestamp(System.nanoTime());
               return value;
             }
@@ -383,9 +381,9 @@ public class Pipeline {
         // attach the output stream as a new input stream to the next nodes
         for (var nextNode : graph.successors(node)) {
           if (!nodesAttachedInputStreams.containsKey(nextNode)) {
-            nodesAttachedInputStreams.put(nextNode, new HashSet<DataStream<MLEventIn>>());
+            nodesAttachedInputStreams.put(nextNode, new HashSet<DataStream<MLEvent>>());
           }
-          nodesAttachedInputStreams.get(nextNode).add(mapOutStreamToInStream(outputStream, (ModelNode)node));
+          nodesAttachedInputStreams.get(nextNode).add(outputStream);
         }
       }
     }
@@ -393,21 +391,7 @@ public class Pipeline {
     return lastOutputStreams;
   }
 
-  protected DataStream<MLEventIn> mapOutStreamToInStream(DataStream<MLEventOut> outStream, ModelNode node) {
-    return outStream.map(new MapFunction<MLEventOut, MLEventIn>() {
-      private static final long serialVersionUID = 8089056025441385575L;
-
-      @Override
-      public MLEventIn map(MLEventOut e) throws Exception {
-        var eventIn = e.toMLEventIn();
-        eventIn.putResult(node.getName(), e.getResult());
-        return eventIn;
-      }
-      
-    });
-  }
-
-  protected DataStream<MLEventIn> connectStreams(Set<DataStream<MLEventIn>> streams) {
+  protected DataStream<MLEvent> mergeStreams(Set<DataStream<MLEvent>> streams) {
     if (streams.size() == 0) return null;
 
     var iter = streams.iterator();
@@ -421,23 +405,23 @@ public class Pipeline {
     return currSt;
   }
 
-  protected class MergeTwoStreamsFunction implements CoFlatMapFunction<MLEventIn, MLEventIn, MLEventIn> {
+  protected class MergeTwoStreamsFunction implements CoFlatMapFunction<MLEvent, MLEvent, MLEvent> {
 
     private static final long serialVersionUID = 5045137104286318493L;
 
-    private Map<Long, MLEventIn> seenEvents = new HashMap<>();
+    private Map<Long, MLEvent> seenEvents = new HashMap<>();
 
     @Override
-    public void flatMap1(MLEventIn e, Collector<MLEventIn> collector) throws Exception {
+    public void flatMap1(MLEvent e, Collector<MLEvent> collector) throws Exception {
       checkCollectOutput(e, collector);
     }
 
     @Override
-    public void flatMap2(MLEventIn e, Collector<MLEventIn> collector) throws Exception {
+    public void flatMap2(MLEvent e, Collector<MLEvent> collector) throws Exception {
       checkCollectOutput(e, collector);
     }
 
-    private void checkCollectOutput(MLEventIn e, Collector<MLEventIn> collector) {
+    private void checkCollectOutput(MLEvent e, Collector<MLEvent> collector) {
       if (seenEvents.containsKey(e.getId())) {
         // merge results from two models, key is the model name
         e.getResults().putAll(seenEvents.get(e.getId()).getResults());
@@ -450,41 +434,7 @@ public class Pipeline {
     
   }
 
-  DataStream<MLEventOut> mergeResults(Set<DataStream<MLEventOut>> results) {
-    /* TODO: Question
-    ** Given the following shape, will the Sink contains multiple events with the same event ID?
-    ** I believe so, but will it be an issue?
-    **         /---> Model A ---\
-    ** Source------> Model B -----> Sink
-    **         \---> Model C ---/
-    */
-    var iter = results.iterator();
-    var currSt = iter.next();
-    while (iter.hasNext()) {
-      var nextSt = iter.next();
-      currSt = currSt.connect(nextSt)
-                     .map(new MergeResultsFunction());
-    }
-
-    return currSt;
-  }
-
-  private class MergeResultsFunction implements CoMapFunction<MLEventOut, MLEventOut, MLEventOut> {
-    private static final long serialVersionUID = 8237181024487409968L;
-
-    @Override
-    public MLEventOut map1(MLEventOut e) throws Exception {
-      return e;
-    }
-
-    @Override
-    public MLEventOut map2(MLEventOut e) throws Exception {
-      return e;
-    }
-
-  }
-
-  private DataStream<MLEventIn> inputStreamFromLocalDataSource(StreamExecutionEnvironment env) {
+  private DataStream<MLEvent> inputStreamFromLocalDataSource(StreamExecutionEnvironment env) {
     var config = Config.getInstance();
 
     int inputPotentialProducers = (int) Math.ceil((double) config.getInputRate() / config.getMaxInputRatePerThread());
@@ -511,13 +461,13 @@ public class Pipeline {
    * @param env 
    * @return DataStream
    */
-  private DataStream<MLEventIn> inputStreamFromKafkaDataSource(StreamExecutionEnvironment env) {
-    KafkaSource<MLEventIn> source = KafkaSource.<MLEventIn>builder()
+  private DataStream<MLEvent> inputStreamFromKafkaDataSource(StreamExecutionEnvironment env) {
+    KafkaSource<MLEvent> source = KafkaSource.<MLEvent>builder()
     .setBootstrapServers("localhost:9094")
     .setTopics("complex-ml-input")
     .setGroupId("complex-ml-input-consumer")
     .setStartingOffsets(OffsetsInitializer.earliest())
-    .setValueOnlyDeserializer(new MLEventInSchema())
+    .setValueOnlyDeserializer(new MLEventSchema())
     .build();
 
     return env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");

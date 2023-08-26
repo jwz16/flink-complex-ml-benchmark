@@ -7,8 +7,8 @@ import org.apache.flink.streaming.api.datastream.AsyncDataStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import edu.bu.flink_complex_ml_benchmark.ComplexMLBenchmark;
 import edu.bu.flink_complex_ml_benchmark.Config;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ModelNode;
 import edu.bu.flink_complex_ml_benchmark.rpc.TorchServeGrpcClient;
 
@@ -36,14 +36,14 @@ public class TorchServePipeline extends ExternalPipeline {
   }
 
   @Override
-  protected DataStream<MLEventOut> modelStreamOp(ModelNode node, Set<DataStream<MLEventIn>> attachedInputStreams) {
+  protected DataStream<MLEvent> modelStreamOp(ModelNode node, Set<DataStream<MLEvent>> attachedInputStreams) {
     var config  = Config.getInstance();
-    DataStream<MLEventOut> op = null;
+    DataStream<MLEvent> op = null;
     if (config.isForceSyncRequest()) {
-      op = connectStreams(attachedInputStreams).process(node.getHandler().toSyncFunction());
+      op = mergeStreams(attachedInputStreams).process(node.getHandler().toSyncFunction());
     } else {
       op = AsyncDataStream.orderedWait(
-        connectStreams(attachedInputStreams),
+        mergeStreams(attachedInputStreams),
         node.getHandler().toAsyncFunction(),
         ASYNC_OPERATOR_TIMEOUT,
         TimeUnit.MILLISECONDS,

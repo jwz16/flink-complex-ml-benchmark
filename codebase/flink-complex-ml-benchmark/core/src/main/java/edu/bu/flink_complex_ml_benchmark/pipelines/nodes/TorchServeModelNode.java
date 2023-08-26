@@ -8,8 +8,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 import edu.bu.flink_complex_ml_benchmark.rpc.TorchServeGrpcClient;
 
 public class TorchServeModelNode extends ExternalModelNode {
@@ -31,11 +30,11 @@ public class TorchServeModelNode extends ExternalModelNode {
    * @param input
    */
   @Override
-  public MLEventOut process(MLEventIn input) {
+  public MLEvent process(MLEvent input) {
     super.process(input);
 
     if (input.getDataAsINDArray() == null) {
-      return input.toMLEventOut();
+      return input;
     }
     
     var inputMat = input.getDataAsINDArray();
@@ -52,16 +51,15 @@ public class TorchServeModelNode extends ExternalModelNode {
     
     var dataToSend = ByteString.copyFrom(jsonObj.toString().getBytes());
 
-    var eventOut = input.toMLEventOut();
+    var eventOut = input;
     
     try {
       String result = TorchServeGrpcClient.getInstance().sendData(dataToSend, this.name);
-      eventOut.setResult(result);
-      eventOut.setData(input.getData());
+      eventOut.putResult(this.name, result);
     } catch (Exception e) {
       e.printStackTrace();
 
-      eventOut.setResult(null);
+      eventOut.setResults(null);
       eventOut.setData(null);
     }
 

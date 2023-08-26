@@ -1,8 +1,11 @@
 package edu.bu.flink_complex_ml_benchmark.connectors.events;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
@@ -12,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Machine Learning Event class
@@ -26,12 +30,44 @@ public class MLEvent implements Serializable {
   protected boolean started;    // is event processed by the first model?
   protected byte[] data;
 
+  // <model_name, result>
+  protected Map<String, String> results = new HashMap<>();
+
   public MLEvent() {}
 
   public MLEvent(long id, long timestamp) {
     this.id = id;
     this.timestamp = timestamp;
     this.started = false;
+  }
+
+  public MLEvent(MLEvent e) {
+    id = e.getId();
+    results = e.getResults();
+    started = e.isStarted();
+    timestamp = e.getTimestamp();
+    startTimestamp = e.getStartTimestamp();
+    finishTimestamp = e.getFinishTimestamp();
+    data = e.getData();
+  }
+
+  public MLEvent dup() {
+    var newEvent = dupWithNoData();
+    newEvent.setData(data);
+
+    return newEvent;
+  }
+
+  public MLEvent dupWithNoData() {
+    var newEvent = new MLEvent();
+    newEvent.setId(id);
+    newEvent.setResults(new HashMap<>(results));
+    newEvent.setStarted(started);
+    newEvent.setTimestamp(timestamp);
+    newEvent.setStartTimestamp(startTimestamp);
+    newEvent.setFinishTimestamp(finishTimestamp);
+
+    return newEvent;
   }
 
   public String serialize() {
@@ -56,6 +92,7 @@ public class MLEvent implements Serializable {
     jsonObj.addProperty("timestamp", timestamp);
     jsonObj.addProperty("start_timestamp", startTimestamp);
     jsonObj.addProperty("finish_timestamp", finishTimestamp);
+    jsonObj.addProperty("results", new Gson().toJson(results));
 
     return jsonObj;
   }
@@ -71,6 +108,9 @@ public class MLEvent implements Serializable {
     data = Base64.getDecoder().decode(
       jsonObj.get("data").getAsString()
     );
+
+    Type type = new TypeToken<Map<String, String>>(){}.getType();
+    results = new Gson().fromJson(jsonObj.get("results").getAsString(), type);
 
     setDataFromINDArray(Nd4j.createNpyFromByteArray(data));
 
@@ -136,6 +176,18 @@ public class MLEvent implements Serializable {
     var buf = BinarySerde.toByteBuffer(mat);
     data = new byte[buf.remaining()];
     buf.get(data);
+  }
+
+  public Map<String, String> getResults() {
+    return results;
+  }
+
+  public void putResult(String modelName, String result) {
+    results.put(modelName, result);
+  }
+
+  public void setResults(Map<String, String> results) {
+    this.results = results;
   }
   
 }

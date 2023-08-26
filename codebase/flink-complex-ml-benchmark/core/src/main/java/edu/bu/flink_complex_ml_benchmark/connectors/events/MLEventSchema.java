@@ -7,28 +7,27 @@ import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 
-public class MLEventOutSchema implements DeserializationSchema<MLEventOut>, SerializationSchema<MLEventOut> {
+public class MLEventSchema implements DeserializationSchema<MLEvent>, SerializationSchema<MLEvent> {
 
   @Override
-  public TypeInformation<MLEventOut> getProducedType() {
-    return TypeInformation.of(MLEventOut.class);
+  public TypeInformation<MLEvent> getProducedType() {
+    return TypeInformation.of(MLEvent.class);
   }
 
   @Override
-  public byte[] serialize(MLEventOut e) {
+  public byte[] serialize(MLEvent e) {
     return e.serialize().getBytes(StandardCharsets.UTF_8);
   }
 
   @Override
-  public MLEventOut deserialize(byte[] message) throws IOException {
-    var e = new MLEventOut();
+  public MLEvent deserialize(byte[] message) throws IOException {
+    var e = new MLEvent();
     e.deserialize(new String(message, StandardCharsets.UTF_8));
-
     return e;
   }
 
   @Override
-  public boolean isEndOfStream(MLEventOut nextElement) {
+  public boolean isEndOfStream(MLEvent nextElement) {
     return false;
   }
   

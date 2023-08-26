@@ -19,7 +19,7 @@ import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 import ai.onnxruntime.TensorInfo;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 
 public class ONNXModel  {
   private static Logger logger = LoggerFactory.getLogger(ONNXModel.class);
@@ -57,7 +57,7 @@ public class ONNXModel  {
     showModelShapeInfo();
   }
   
-  public String inference(MLEventIn event) {
+  public String inference(MLEvent event) {
     logger.info("Inferencing event: " + event.getId());
 
     try {

@@ -1,7 +1,6 @@
 package edu.bu.flink_complex_ml_benchmark.pipelines.nodes;
 
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 
 public class EmbeddedModelNode extends ModelNode {
 
@@ -16,7 +15,7 @@ public class EmbeddedModelNode extends ModelNode {
    * @param input
    */
   @Override
-  public MLEventOut process(MLEventIn input) {
+  public MLEvent process(MLEvent input) {
     return super.process(input);
   }
 

@@ -1,8 +1,7 @@
 package edu.bu.flink_complex_ml_benchmark.pipelines.nodes;
 
 import ai.onnxruntime.OrtException;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 import edu.bu.flink_complex_ml_benchmark.models.ONNXModel;
 
 public class ONNXModelNode extends EmbeddedModelNode {
@@ -38,22 +37,21 @@ public class ONNXModelNode extends EmbeddedModelNode {
    * @param input
    */
   @Override
-  public MLEventOut process(MLEventIn input) {
+  public MLEvent process(MLEvent input) {
     super.process(input);
 
     if (input.getDataAsINDArray() == null) {
-      return input.toMLEventOut();
+      return input;
     }
 
-    var eventOut = input.toMLEventOut();
+    var eventOut = input;
     try {
       String result = this.model.inference(input);
-      eventOut.setResult(result);
-      eventOut.setData(input.getData());
+      eventOut.putResult(this.name, result);
     } catch (Exception e) {
       e.printStackTrace();
-
-      eventOut.setResult(null);
+      
+      eventOut.setResults(null);
       eventOut.setData(null);
     }
 

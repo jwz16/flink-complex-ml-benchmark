@@ -9,16 +9,15 @@ import org.apache.flink.streaming.api.functions.async.ResultFuture;
 import org.apache.flink.streaming.api.functions.async.RichAsyncFunction;
 import org.apache.flink.util.Collector;
 
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ModelNode;
 
 public class BaseModelHandler implements Serializable {
 
   private static final long serialVersionUID = 4421609248097925816L;
   
-  protected RichAsyncFunction<MLEventIn, MLEventOut> asyncFunction = new ModelAsyncFunction(this);  // For external
-  protected ProcessFunction<MLEventIn, MLEventOut> syncFunction = new ModelSyncFunction(this);      // For embedded
+  protected RichAsyncFunction<MLEvent, MLEvent> asyncFunction = new ModelAsyncFunction(this);  // For external
+  protected ProcessFunction<MLEvent, MLEvent> syncFunction = new ModelSyncFunction(this);      // For embedded
 
   protected ModelNode modelNode;
 
@@ -28,30 +27,30 @@ public class BaseModelHandler implements Serializable {
     this.modelNode = modelNode;
   }
 
-  public RichAsyncFunction<MLEventIn, MLEventOut> toAsyncFunction() {
+  public RichAsyncFunction<MLEvent, MLEvent> toAsyncFunction() {
     return asyncFunction;
   }
 
-  public ProcessFunction<MLEventIn, MLEventOut> toSyncFunction() {
+  public ProcessFunction<MLEvent, MLEvent> toSyncFunction() {
     return syncFunction;
   }
 
-  protected MLEventIn preprocess(MLEventIn input) {
+  protected MLEvent preprocess(MLEvent input) {
     return input;
   }
 
-  protected MLEventOut inference(MLEventIn input) throws Exception {
+  protected MLEvent inference(MLEvent input) throws Exception {
     return modelNode.process(input);
   }
 
-  protected MLEventOut postprocess(MLEventOut output) {
+  protected MLEvent postprocess(MLEvent output) {
     return output;
   }
 
-  protected MLEventOut process(MLEventIn input) {
+  protected MLEvent process(MLEvent input) {
     var inputPrep = preprocess(input);
 
-    var result = new MLEventOut();
+    var result = new MLEvent();
     try {
       result = inference(inputPrep);
     } catch (Exception e) {
@@ -63,7 +62,7 @@ public class BaseModelHandler implements Serializable {
     return eventOut;
   }
 
-  protected class ModelAsyncFunction extends RichAsyncFunction<MLEventIn, MLEventOut> {
+  protected class ModelAsyncFunction extends RichAsyncFunction<MLEvent, MLEvent> {
 
     private static final long serialVersionUID = 4467786009847331338L;
 
@@ -76,14 +75,14 @@ public class BaseModelHandler implements Serializable {
     }
 
     @Override
-    public void asyncInvoke(MLEventIn input, ResultFuture<MLEventOut> resultFuture) {
+    public void asyncInvoke(MLEvent input, ResultFuture<MLEvent> resultFuture) {
       var eventOut = handler.process(input);
       resultFuture.complete(Collections.singleton(eventOut));
     }
     
   }
 
-  protected class ModelSyncFunction extends ProcessFunction<MLEventIn, MLEventOut> {
+  protected class ModelSyncFunction extends ProcessFunction<MLEvent, MLEvent> {
 
     private static final long serialVersionUID = -4433846089452226319L;
 
@@ -106,7 +105,7 @@ public class BaseModelHandler implements Serializable {
     }
 
     @Override
-    public void processElement(MLEventIn input, ProcessFunction<MLEventIn, MLEventOut>.Context ctx, Collector<MLEventOut> collector) {
+    public void processElement(MLEvent input, ProcessFunction<MLEvent, MLEvent>.Context ctx, Collector<MLEvent> collector) {
       var eventOut = handler.process(input);
       collector.collect(eventOut);
     }

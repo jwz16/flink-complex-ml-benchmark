@@ -3,9 +3,9 @@ package edu.bu.flink_complex_ml_benchmark.connectors;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 
-public abstract class Generator implements Iterator<MLEventIn>, Serializable {
+public abstract class Generator implements Iterator<MLEvent>, Serializable {
 
   private static final long serialVersionUID = 6572714416509800940L;
 
@@ -15,7 +15,7 @@ public abstract class Generator implements Iterator<MLEventIn>, Serializable {
   }
 
   @Override
-  public MLEventIn next() {
+  public MLEvent next() {
     throw new UnsupportedOperationException("Unimplemented method 'next'");
   }
 

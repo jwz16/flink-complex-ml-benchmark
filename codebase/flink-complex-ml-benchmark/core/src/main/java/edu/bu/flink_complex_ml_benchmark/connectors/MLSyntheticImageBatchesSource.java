@@ -3,13 +3,13 @@ package edu.bu.flink_complex_ml_benchmark.connectors;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.examples.utils.ThrottledIterator;
 
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 
-public class MLSyntheticImageBatchesSource extends RichParallelSourceFunction<MLEventIn> {
+public class MLSyntheticImageBatchesSource extends RichParallelSourceFunction<MLEvent> {
   private static final long serialVersionUID = -8729658830449241210L;
   protected volatile boolean isRunning = true;
   private Generator generator;
-  private ThrottledIterator<MLEventIn> throttledIterator;
+  private ThrottledIterator<MLEvent> throttledIterator;
   private boolean shouldBeThrottled = false;
   
   public MLSyntheticImageBatchesSource(int imageSize, int batchSize, int experimentTimeInSeconds, int warmupRequestsNum, int inputRate) {
@@ -18,12 +18,12 @@ public class MLSyntheticImageBatchesSource extends RichParallelSourceFunction<ML
     // An input rate equal to 0 means that the source should not be throttled
     if (inputRate > 0) {
       this.shouldBeThrottled = true;
-      this.throttledIterator = new ThrottledIterator<MLEventIn>(generator, inputRate / 2);
+      this.throttledIterator = new ThrottledIterator<MLEvent>(generator, inputRate / 2);
     }
   }
 
   @Override
-  public void run(SourceContext<MLEventIn> ctx) throws Exception {
+  public void run(SourceContext<MLEvent> ctx) throws Exception {
     this.isRunning = true;
     if (this.shouldBeThrottled) {
       while (isRunning && this.throttledIterator.hasNext()) {

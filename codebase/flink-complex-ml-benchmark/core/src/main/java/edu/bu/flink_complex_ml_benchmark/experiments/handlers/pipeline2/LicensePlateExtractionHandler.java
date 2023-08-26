@@ -1,7 +1,6 @@
 package edu.bu.flink_complex_ml_benchmark.experiments.handlers.pipeline2;
 
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventIn;
-import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEventOut;
+import edu.bu.flink_complex_ml_benchmark.connectors.events.MLEvent;
 import edu.bu.flink_complex_ml_benchmark.handlers.BaseModelHandler;
 import edu.bu.flink_complex_ml_benchmark.pipelines.nodes.ModelNode;
 
@@ -16,7 +15,7 @@ public class LicensePlateExtractionHandler extends BaseModelHandler {
   }
 
   @Override
-  protected MLEventIn preprocess(MLEventIn input) {
+  protected MLEvent preprocess(MLEvent input) {
     // TODO: should perform some model specific logic here.
     // input event result should be a JSON string
     // input.getResults().get('model_name') will give the specific output from the upstream model.
@@ -25,18 +24,18 @@ public class LicensePlateExtractionHandler extends BaseModelHandler {
   }
 
   @Override
-  protected MLEventOut inference(MLEventIn input) {
+  protected MLEvent inference(MLEvent input) {
     try {
       return modelNode.process(input);
     } catch (Exception e) {
       e.printStackTrace();
     }
 
-    return new MLEventOut();
+    return new MLEvent();
   }
 
   @Override
-  protected MLEventOut postprocess(MLEventOut output) {
+  protected MLEvent postprocess(MLEvent output) {
     // TODO: should perform some model specific logic here.
     // output event result should be a JSON string
     // e.g. {'bounding_boxes': [...]} etc.
